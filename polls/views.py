@@ -1,7 +1,9 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.urlresolvers import reverse
+from django.contrib.sessions.backends.db import SessionStore
+import datetime, time
 
 from polls.models import Poll,Choice,Results
 
@@ -24,10 +26,19 @@ def results(request, r_id):
     return HttpResponse("You're looking at the results of poll.")
 
 def vote(request, poll_id):
-	r = Results(poll=poll_id, choice=request.POST['choice'])
+	if int(poll_id) == 1:
+		now = datetime.datetime.now() 
+		request.session['user_session'] = int(time.mktime(now.timetuple()))
+
+	r = Results(user=request.session['user_session'], poll=poll_id, choice=request.POST['choice'])
 	r.save()
-	# Always return an HttpResponseRedirect after successfully dealing
-	# with POST data. This prevents data from being posted twice if a
-	# user hits the Back button.
-	#return HttpResponseRedirect(reverse('polls:results', args=(r.id,)))
-	return render(request, 'polls/results.html', {'result': r})
+
+	if int(poll_id) < 2 :
+		next_poll_id = int(poll_id)+1
+		return redirect('/polls/' + str(next_poll_id))
+		#poll = Poll.objects.get(pk=next_poll_id)
+		#return render(request, 'polls/detail.html', {'poll': poll})
+	else:
+		del request.session['user_session']
+		return render(request, 'polls/results.html', {'result': r})
+	

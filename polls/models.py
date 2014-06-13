@@ -14,5 +14,6 @@ class Category(models.Model):
  weight = models.IntegerField()
 
 class Results(models.Model): 
+ user = models.IntegerField()
  poll = models.IntegerField()
  choice = models.IntegerField() 
